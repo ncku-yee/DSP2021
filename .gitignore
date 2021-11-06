@@ -1,3 +1,9 @@
 # ignores doc/docx files
 *.doc
 *.docx
+
+# vscode
+.vscode/
+
+# Jupyter Notebook
+.ipynb_checkpoints

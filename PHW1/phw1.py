@@ -202,7 +202,7 @@ indices = np.where(mnist['target'].to_numpy() == '8')[0]
 data_8 = mnist['data'].to_numpy()[indices]
 mean_8 = np.mean(data_8, axis=0)
 data_8_centered = (data_8 - mean_8).T
-last_8 = data_8_centered[:,-1].copy()
+origin_signal = data_8[-1].copy()
 # Q7-1.
 # Calculate the covariance matrix
 covariance_mat = np.cov(data_8_centered)
@@ -214,7 +214,7 @@ eigen_vec = eigen_vec.T
 eigen_val_des = eigen_val[np.argsort(eigen_val)[::-1]]
 eigen_vec_des = eigen_vec[np.argsort(eigen_val)[::-1]]
 eigen_vec_des_top_5= eigen_vec_des[:5]
-coef = np.dot(eigen_vec_des_top_5, last_8)
+coef = np.dot(eigen_vec_des_top_5, origin_signal)
 reconstruct = np.dot(eigen_vec_des_top_5.T, coef)
 print("PCA L2-norm: {0}".format(np.linalg.norm((reconstruct + mean_8) - origin_signal)))
 fig = plt.figure(figsize=(9, 3))
@@ -260,9 +260,12 @@ basis = data_8[:-1].T
 origin_signal = data_8[-1].copy()
 reg = Lasso()
 reg.fit(basis, origin_signal)
-print("Lasso L2-norm: {0}".format(np.linalg.norm((basis @ reg.coef_) - origin_signal)))
+# Sorting the coefficients by edscending order.
+coef_des = reg.coef_[np.argsort(reg.coef_)[::-1]]
+basis_des = basis.T[np.argsort(reg.coef_)[::-1]].T
+print("Lasso L2-norm: {0}".format(np.linalg.norm((basis_des[:,:5] @ coef_des[:5]) - origin_signal)))
 plt.subplot(133)
-plt.imshow((basis @ reg.coef_).reshape(28, 28), 'gray')
+plt.imshow((basis_des[:,:5] @ coef_des[:5]).reshape(28, 28), 'gray')
 plt.title('Lasso')
 plt.axis('off')
 plt.savefig(os.path.join(directory, 'Q7.png'))

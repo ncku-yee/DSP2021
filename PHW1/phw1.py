@@ -51,13 +51,14 @@ eigen_vec_des = eigen_vec[np.argsort(eigen_val)[::-1]]
 fig = plt.figure(figsize=(9, 3))
 for i in range(3):
     plt.subplot(131 + i)
-    plt.imshow((eigen_vec_des[i] + mean_5).real.reshape(28, 28), 'gray')
+    plt.imshow((eigen_vec_des[i]).real.reshape(28, 28), 'gray')
     plt.title("λ = {0}".format(eigen_val_des[i].real))
     plt.axis('off')
 plt.savefig(os.path.join(directory, 'Q2.png'))
 
 # Q3.
 origin_first_5 = data_5[0]
+origin_first_5_mean = origin_first_5 - mean_5
 images_5 = [origin_first_5]
 bases = [3, 10, 30, 100]
 fig = plt.figure(figsize=(15, 3))
@@ -69,9 +70,10 @@ for i, n in enumerate(bases):
     plt.subplot(152 + i)
     # Obtain the first n largest eigenvectors and corresponding coefficients.
     eigen_vec_des_top_n = eigen_vec_des[:n]
-    coef_5_top_n = np.dot(eigen_vec_des_top_n, origin_first_5)
+    coef_5_top_n = np.dot(eigen_vec_des_top_n, origin_first_5_mean)
     # Reconstruct the signal by the eigenvectors.
     reconstruct_n_base = np.dot(eigen_vec_des_top_n.T, coef_5_top_n)
+    print("{0}".format(np.linalg.norm((reconstruct_n_base + mean_5) - origin_first_5)))
     plt.imshow((reconstruct_n_base + mean_5).real.reshape(28, 28), 'gray')
     plt.title("5 with {0}d".format(n))
     plt.axis('off')
@@ -204,6 +206,7 @@ data_8 = mnist['data'].to_numpy()[indices]
 mean_8 = np.mean(data_8, axis=0)
 data_8_centered = (data_8 - mean_8).T
 origin_signal = data_8[-1].copy()
+origin_signal_mean = origin_signal - mean_8
 # Q7-1.
 # Calculate the covariance matrix
 covariance_mat = np.cov(data_8_centered)
@@ -215,7 +218,7 @@ eigen_vec = eigen_vec.T
 eigen_val_des = eigen_val[np.argsort(eigen_val)[::-1]]
 eigen_vec_des = eigen_vec[np.argsort(eigen_val)[::-1]]
 eigen_vec_des_top_5= eigen_vec_des[:5]
-coef = np.dot(eigen_vec_des_top_5, origin_signal)
+coef = np.dot(eigen_vec_des_top_5, origin_signal_mean)
 reconstruct = np.dot(eigen_vec_des_top_5.T, coef)
 print("PCA L2-norm: {0}".format(np.linalg.norm((reconstruct + mean_8) - origin_signal)))
 fig = plt.figure(figsize=(9, 3))

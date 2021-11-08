@@ -134,6 +134,7 @@ for k in range(sparsity):
         if product > max_product:
             max_product, max_base, max_index = product, base, i
     # Calculate the coefficient vector by the pseudo inerse: (M^T*M)^(-1)M^T*x
+    print(max_index, np.linalg.norm(max_base))
     sparse_basis.append(max_base)
     M = np.array(sparse_basis).T
     pseudo_inverse = np.linalg.pinv(M.T @ M)

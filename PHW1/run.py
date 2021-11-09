@@ -8,6 +8,9 @@ directory = './fig/'
 if not os.path.isdir(directory):
     os.makedirs(directory)
 
+# Fetch the datasets from openml
+mnist = fetch_openml('mnist_784')
+
 """
 Part1: PCA
 Q2. ~ Q4.

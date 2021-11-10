@@ -273,6 +273,26 @@ plt.imshow((basis_des[:,:5] @ coef_des[:5]).reshape(28, 28), 'gray')
 plt.title('Lasso')
 plt.axis('off')
 plt.savefig(os.path.join(directory, 'Q7.png'))
+# Q7-4. Experiment
+alpha_list = np.arange(0, 1.05, 0.05)
+max_iter_list = np.arange(1000, 11000, 1000)
+selection_list = ['cyclic', 'random']
+tol_list = [0.1, 0.01, 0.001, 0.0001, 0.00001]
+results = {}
+for alpha in alpha_list:
+    for max_iter in max_iter_list:
+        for tol in tol_list:
+            for selection in selection_list:
+                reg = Lasso(alpha=alpha, max_iter=max_iter, selection=selection, tol=tol)
+                reg.fit(basis, origin_signal)
+                l2norm = np.linalg.norm(basis @ reg.coef_ - origin_signal)
+                print("L2-norm(alpha={0}, max_iter={1}, tol={2}, selection={3}): {4}".format(alpha, max_iter, tol, selection, l2norm))
+                results['alpha={0}, max_iter={1}, tol={2}, selection={3}'.format(alpha, max_iter, tol, selection)] = format(l2norm, '.2f')
+file = "experiment.txt"
+with open(file, "w") as f:
+    for key, value in results.items():
+        f.write(key + ': ' + str(value) + '\n')
+f.close()
 
 """
 Bonus: Handcraft lasso

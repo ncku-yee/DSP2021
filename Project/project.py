@@ -180,13 +180,14 @@ def load_model(model,filename):
     model.load_state_dict(torch.load(filename))
     return model
 
+save_model(model_autoencoder, "autoencoder-best.pth")
 model_autoencoder = AutoEncoder().to(device)    
 model_autoencoder = load_model(model_autoencoder, "autoencoder-best.pth")
 model_clf = MyDSPNet().to(device)
-model_clf = load_model(model_clf, "./weights/best_weight.pth")
+model_clf = load_model(model_clf, "./weight.pth")       # Task 1 model
 
 with torch.no_grad():
-    with open("./results/result_part2-test.csv","w") as f:
+    with open("./result.csv","w") as f:
         f.write("id,category\n")
         for idx, input in enumerate(testdata):
             input = input.astype('float32')

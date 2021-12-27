@@ -5,7 +5,16 @@ from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
 from sklearn.preprocessing import StandardScaler
 from torch import optim
+import argparse
 
+# Parse Arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--data", dest="traindata")
+parser.add_argument("-l", "--label", dest="trainlabel")
+args = parser.parse_args()
+assert (args.traindata != None and args.trainlabel != None)
+
+# Fix the seed
 torch.manual_seed(123)
 torch.cuda.manual_seed(123)
 np.random.seed(123)
@@ -13,35 +22,28 @@ random.seed(123)
 torch.backends.cudnn.enabled=False
 torch.backends.cudnn.deterministic=True
 
+# Select CUDA device
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 
-norm = True
-traindata, trainlabel = np.load("./traindata.npy"), np.load("./trainlabel.npy")
-testdata = np.load("./testdata.npy")
+# Load training data and label
+traindata, trainlabel = np.load(args.traindata), np.load(args.trainlabel)
 print(f"traindata.shape = {traindata.shape}")
 print(f"trainlabel.shape = {trainlabel.shape}")
-print(f"testdata.shape = {testdata.shape}")
 
-
-if norm:
-    print("Preprocessing data...")
-    # FFT(Fast Fourier Transform)
-    # traindata = np.abs(np.fft.fft(traindata))
-    # testdata = np.abs(np.fft.fft(testdata))
-    scalerA = StandardScaler()
-    scalerA.fit(traindata[:,0,:])
-    tmp = scalerA.transform(traindata[:,0,:])
-    traindata[:,0,:] = tmp
-    tmp = scalerA.transform(testdata[:,0,:])
-    testdata[:,0,:] = tmp
-    scalerB = StandardScaler()
-    scalerB.fit(traindata[:,1,:])
-    tmp = scalerB.transform(traindata[:,1,:])
-    traindata[:,1,:] = tmp
-    tmp = scalerB.transform(testdata[:,1,:])
-    testdata[:,1,:] = tmp
-    print("===End Preprocessing===")
+# Preprocessing
+print("===Start Preprocessing===")
+# FFT(Fast Fourier Transform)
+# traindata = np.abs(np.fft.fft(traindata))
+scalerA = StandardScaler()
+scalerA.fit(traindata[:,0,:])
+tmp = scalerA.transform(traindata[:,0,:])
+traindata[:,0,:] = tmp
+scalerB = StandardScaler()
+scalerB.fit(traindata[:,1,:])
+tmp = scalerB.transform(traindata[:,1,:])
+traindata[:,1,:] = tmp
+print("===End Preprocessing===")
 
 # Define Dataset Class
 class RawDataset(Dataset):
@@ -71,8 +73,6 @@ epochs = 30
 # Load the dataset.
 train_dataloader = DataLoader(RawDataset(traindata, trainlabel),
                                 batch_size = batch_size, shuffle = True)
-test_dataloader = DataLoader(RawDataset(testdata),
-                                batch_size = 1, shuffle = False)
 
 # Neural Networks
 class MyDSPNet(nn.Module):
@@ -147,7 +147,7 @@ for epoch in range(epochs):
     acc, loss = train(train_dataloader, model, loss_fn, optimizer)
     train_acc.append(100 * acc)
     train_loss.append(loss)
-    print(f"Training Error:\n Acc: {train_acc[-1]:>0.1f}% | loss: {train_loss[-1]:>9f}\n")
+    print(f"Training Error:\n\tAcc: {train_acc[-1]:>3.1f}% | loss: {train_loss[-1]:>9f}\n")
 
 
 # Save the model
@@ -156,13 +156,3 @@ def save_model(model, filename):
     for key in state: state[key] = state[key].clone().cpu()
     torch.save(state, filename)
 save_model(model,"./weight.pth")
-
-# Load the weights and 
-model = model.to(device)
-with open("./result.csv","w") as f:
-    f.write("id,category\n")
-    for i, x in enumerate(test_dataloader):
-        x = x.to(device)
-        output = model(x)
-        pred = output.argmax(dim=1, keepdim=True)
-        f.write("%d,%d\n"%(i,pred.item()))
